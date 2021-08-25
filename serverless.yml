@@ -1,0 +1,89 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: tdc-event-bridge
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - events:PutEvents
+      Resource: "*"
+  eventBridge:
+    useCloudFormation: true
+
+functions:
+  placeOrder:
+    handler: handlers/commands/place_order.main
+    events:
+      - http:
+          path: order
+          method: post
+  openPortfolio:
+    handler: handlers/commands/open_portfolio.main
+    events:
+      - http:
+          path: portfolio
+          method: post
+  closePortfolio:
+    handler: handlers/commands/close_portfolio.main
+    events:
+      - http:
+          path: portfolio
+          method: delete
+  orderPlaced:
+    handler: handlers/events/order_placed.main
+    events:
+      - eventBridge:
+          eventBus: tdc-event-bridge-bus
+          pattern:
+            source:
+              - OrderPlaced
+  portfolioClosed:
+    handler: handlers/events/portfolio_closed.main
+    events:
+      - eventBridge:
+          eventBus: tdc-event-bridge-bus
+          pattern:
+            source:
+              - PortfolioClosed
+  portfolioOpened:
+    handler: handlers/events/portfolio_opened.main
+    events:
+      - eventBridge:
+          eventBus: tdc-event-bridge-bus
+          pattern:
+            source:
+              - PortfolioOpened
+  sharesDebited:
+    handler: handlers/events/shares_debited.main
+    events:
+      - eventBridge:
+          eventBus: tdc-event-bridge-bus
+          pattern:
+            source:
+              - SharesDebited
+
